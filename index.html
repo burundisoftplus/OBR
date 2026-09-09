@@ -19,9 +19,8 @@
   }
   *{box-sizing:border-box}
   html,body{margin:0}
-  body{background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    -webkit-font-smoothing:antialiased}
-  .wrap{max-width:1080px;margin:0 auto;padding:18px 16px 48px}
+  body{background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 48px}
   h1,h2,h3{margin:0}
   .muted{color:var(--muted)}
   button{font:inherit;cursor:pointer}
@@ -29,47 +28,58 @@
   .btn:hover{background:var(--accent2)}
   .btn.ghost{background:transparent;color:var(--ink2);border:1px solid var(--border)}
 
-  /* Login */
   #login{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
   .login-card{width:100%;max-width:380px;padding:30px 26px}
   .brand{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-  .logo{width:34px;height:34px;border-radius:9px;background:var(--accent);color:var(--accent-ink);
-    display:grid;place-items:center;font-weight:800;font-size:15px}
+  .logo{width:34px;height:34px;border-radius:9px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:800;font-size:15px}
   .login-card h1{font-size:19px;letter-spacing:-.01em}
   .field{margin-top:14px}
   .field label{display:block;font-size:12px;font-weight:600;color:var(--ink2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
-  .field input{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--ink);font:inherit}
+  .field input,.field select{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--ink);font:inherit}
   .field input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
   #login .btn{width:100%;margin-top:20px;padding:12px}
   .err{color:var(--danger);font-size:13.5px;margin-top:12px;min-height:18px}
 
-  /* App */
   #app{display:none}
-  header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:6px 2px 18px}
+  header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:6px 2px 14px}
   header.top .brand h1{font-size:17px}
-  header.top .who{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink2)}
+  header.top .who{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink2);flex-wrap:wrap}
   select{font:inherit;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ink)}
 
-  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
-  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:15px 16px;box-shadow:var(--shadow)}
-  .kpi .lbl{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-  .kpi .val{font-size:24px;font-weight:750;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
-  .kpi .val small{font-size:13px;font-weight:600;color:var(--muted)}
-  .kpi.accent .val{color:var(--accent)}
-  .kpi.warn .val{color:var(--warn)}
+  .periodbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 16px}
+  .chip{border:1px solid var(--border);background:var(--surface);color:var(--ink2);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600}
+  .chip.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+  .periodbar .dates{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+  .periodbar .dates input{padding:6px 8px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--ink);font:inherit;font-size:12.5px}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
+  .kpi .lbl{font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .kpi .val{font-size:22px;font-weight:750;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
+  .kpi .val small{font-size:12.5px;font-weight:600;color:var(--muted)}
+  .kpi .sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .kpi.accent .val{color:var(--accent)} .kpi.warn .val{color:var(--warn)} .kpi.good .val{color:var(--good)}
 
   section.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);margin-top:16px;padding:16px 18px}
   section.panel h2{font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2);margin-bottom:14px}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:720px){.cols{grid-template-columns:1fr}}
 
-  /* Chart */
   .chart{width:100%;height:200px}
   .chart .bar{fill:var(--accent);transition:opacity .15s}
-  .chart .bar:hover{opacity:.75}
+  .chart .bar:hover{opacity:.72}
   .chart .axis{stroke:var(--border)}
   .chart text{fill:var(--muted);font-size:10px}
 
-  /* Table */
+  .rank{display:flex;flex-direction:column;gap:9px}
+  .rank .row{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center}
+  .rank .name{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rank .amt{font-size:13px;font-weight:650;font-variant-numeric:tabular-nums}
+  .rank .track{grid-column:1/3;height:5px;border-radius:4px;background:color-mix(in srgb,var(--accent) 14%,transparent);overflow:hidden}
+  .rank .fill{height:100%;background:var(--accent);border-radius:4px}
+  .rank .empty{color:var(--muted);font-size:13px;padding:8px 0}
+
   .tbl-scroll{overflow-x:auto}
   table{width:100%;border-collapse:collapse;font-size:13.5px}
   th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
@@ -87,7 +97,7 @@
 <div id="login">
   <form class="card login-card" onsubmit="doLogin(event)">
     <div class="brand"><div class="logo">OBR</div><h1>Tableau de bord</h1></div>
-    <p class="muted" style="font-size:13.5px;margin:0">Connectez-vous pour consulter l'activité de votre société.</p>
+    <p class="muted" style="font-size:13.5px;margin:0">Connectez-vous pour consulter votre activité.</p>
     <div class="field"><label>Adresse e-mail</label><input id="email" type="email" autocomplete="username" required></div>
     <div class="field"><label>Mot de passe</label><input id="pwd" type="password" autocomplete="current-password" required></div>
     <button class="btn" type="submit">Se connecter</button>
@@ -99,34 +109,52 @@
   <header class="top">
     <div class="brand"><div class="logo">OBR</div><h1 id="coName">…</h1></div>
     <div class="who">
-      <select id="coSelect" style="display:none" onchange="render()"></select>
+      <select id="coSelect" style="display:none" onchange="loadData()"></select>
       <span id="userEmail"></span>
       <button class="btn ghost" onclick="logout()">Quitter</button>
     </div>
   </header>
+
+  <div class="periodbar" id="periodbar">
+    <span class="chip" data-p="month">Ce mois</span>
+    <span class="chip" data-p="year">Cette année</span>
+    <span class="chip on" data-p="12m">12 mois</span>
+    <span class="chip" data-p="all">Tout</span>
+    <span class="dates">du <input type="date" id="from" title="Date de début" aria-label="Date de début"> au <input type="date" id="to" title="Date de fin" aria-label="Date de fin"></span>
+  </div>
+
   <div id="content"><div class="loading">Chargement…</div></div>
 </div></div>
 
 <script>
 const SUPABASE_URL="https://pcmkpkqnvexybmjgnsec.supabase.co", ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjbWtwa3FudmV4eWJtamduc2VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4MjA0NDcsImV4cCI6MjEwNDM5NjQ0N30.kUKDuOuHjFkZfNEcBR3BHOmLQ8_bGeuw9zqrxEUJXRY";
 const TK="obr_report_token";
-let token=null, invoices=[], companies=[];
+let token=null, companies=[], invoices=[], items=[], range=null;
 
-function api(path, extra){
-  return fetch(SUPABASE_URL+"/rest/v1/"+path, {headers:Object.assign(
-    {apikey:ANON, Authorization:"Bearer "+token}, extra||{})});
-}
 const fmt=n=>new Intl.NumberFormat("fr-FR",{maximumFractionDigits:0}).format(Math.round(n||0));
 const esc=s=>(s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+
+async function fetchAll(path){
+  let out=[], from=0, page=1000;
+  while(true){
+    const r=await fetch(SUPABASE_URL+"/rest/v1/"+path,{headers:{apikey:ANON,Authorization:"Bearer "+token,
+      "Range-Unit":"items","Range":from+"-"+(from+page-1)}});
+    if(r.status===401){ logout(); return out; }
+    if(!r.ok) break;
+    const rows=await r.json(); out=out.concat(rows);
+    if(rows.length<page) break; from+=page;
+  }
+  return out;
+}
 
 async function doLogin(e){
   e.preventDefault();
   const err=document.getElementById("loginErr"); err.textContent="";
   try{
     const r=await fetch(SUPABASE_URL+"/auth/v1/token?grant_type=password",{
-      method:"POST", headers:{apikey:ANON,"Content-Type":"application/json"},
-      body:JSON.stringify({email:document.getElementById("email").value.trim(),
-                           password:document.getElementById("pwd").value})});
+      method:"POST",headers:{apikey:ANON,"Content-Type":"application/json"},
+      body:JSON.stringify({email:document.getElementById("email").value.trim(),password:document.getElementById("pwd").value})});
     const d=await r.json();
     if(!r.ok||!d.access_token){ err.textContent=d.error_description||d.msg||"Identifiants incorrects."; return; }
     token=d.access_token; localStorage.setItem(TK,token);
@@ -139,73 +167,130 @@ function logout(){ localStorage.removeItem(TK); location.reload(); }
 async function start(){
   document.getElementById("login").style.display="none";
   document.getElementById("app").style.display="block";
-  // sociétés autorisées (RLS : ne renvoie que les siennes)
-  const rc=await api("report_access?select=company_id,company_name&order=company_name");
+  const rc=await fetch(SUPABASE_URL+"/rest/v1/report_access?select=company_id,company_name&order=company_name",
+    {headers:{apikey:ANON,Authorization:"Bearer "+token}});
   if(rc.status===401){ logout(); return; }
   companies=await rc.json();
   const sel=document.getElementById("coSelect");
   if(companies.length>1){
-    sel.style.display=""; sel.innerHTML=companies.map(c=>`<option value="${c.company_id}">${esc(c.company_name)}</option>`).join("");
+    sel.style.display="";
+    sel.innerHTML='<option value="all">Toutes mes sociétés</option>'+
+      companies.map(c=>`<option value="${c.company_id}">${esc(c.company_name)}</option>`).join("");
   }
   if(!companies.length){ document.getElementById("content").innerHTML='<div class="loading">Aucune société associée à ce compte.</div>'; return; }
+  // barre de période
+  document.querySelectorAll('#periodbar .chip').forEach(ch=>ch.onclick=()=>{
+    document.querySelectorAll('#periodbar .chip').forEach(c=>c.classList.remove('on'));
+    ch.classList.add('on'); document.getElementById('from').value=''; document.getElementById('to').value='';
+    render();
+  });
+  ['from','to'].forEach(id=>document.getElementById(id).onchange=()=>{
+    document.querySelectorAll('#periodbar .chip').forEach(c=>c.classList.remove('on')); render();
+  });
+  loadData();
+}
+
+async function loadData(){
+  const sel=document.getElementById("coSelect");
+  const val=companies.length>1 ? sel.value : String(companies[0].company_id);
+  const flt = (val==="all") ? "" : ("&company_id=eq."+val);
+  document.getElementById("coName").textContent =
+    (val==="all") ? "Toutes mes sociétés" : ((companies.find(c=>String(c.company_id)===val)||{}).company_name||"Ma société");
+  document.getElementById("content").innerHTML='<div class="loading">Chargement…</div>';
+  invoices=await fetchAll("invoices?select=id,number,date,client_name,company_name,total_ht,total_tva,total_ttc,status,payment_status,paid_amount&order=date.desc"+flt);
+  items=await fetchAll("invoice_items?select=invoice_id,designation,quantity,amount_ht,amount_ttc,cost"+flt);
   render();
 }
 
-async function render(){
-  const sel=document.getElementById("coSelect");
-  const co=companies.find(c=>String(c.company_id)===sel.value)||companies[0];
-  document.getElementById("coName").textContent=co.company_name||"Ma société";
-  document.getElementById("content").innerHTML='<div class="loading">Chargement…</div>';
-  const r=await api("invoices?company_id=eq."+co.company_id+
-    "&select=number,date,client_name,total_ttc,status,payment_status,paid_amount&order=date.desc");
-  if(!r.ok){ document.getElementById("content").innerHTML='<div class="loading">Lecture impossible.</div>'; return; }
-  invoices=await r.json();
-  draw();
+function curRange(){
+  const f=document.getElementById('from').value, t=document.getElementById('to').value;
+  if(f||t) return [f||"0000-01-01", t||"9999-12-31"];
+  const on=document.querySelector('#periodbar .chip.on'); const key=on?on.dataset.p:"12m";
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth();
+  if(key==="month") return [iso(new Date(y,m,1)),"9999-12-31"];
+  if(key==="year") return [iso(new Date(y,0,1)),"9999-12-31"];
+  if(key==="12m") return [iso(new Date(y,m-11,1)),"9999-12-31"];
+  return ["0000-01-01","9999-12-31"];
 }
 
-function draw(){
-  const real=invoices.filter(i=>i.status==="sent"||i.status==="issued");
-  const ca=real.reduce((s,i)=>s+(i.total_ttc||0),0);
+function render(){
+  const [from,to]=curRange();
+  const inRange=i=>(i.date||"")>=from&&(i.date||"")<=to;
+  const inv=invoices.filter(inRange);
+  const real=inv.filter(i=>i.status==="sent"||i.status==="issued");
+  const realIds=new Set(real.map(i=>i.id));
+  const caHT=real.reduce((s,i)=>s+(i.total_ht||0),0);
+  const caTTC=real.reduce((s,i)=>s+(i.total_ttc||0),0);
+  const tva=real.reduce((s,i)=>s+(i.total_tva||0),0);
   const nb=real.length;
-  const unpaid=invoices.filter(i=>i.status!=="cancelled").reduce((s,i)=>s+Math.max(0,(i.total_ttc||0)-(i.paid_amount||0)),0);
-  const panier=nb?ca/nb:0;
+  const panier=nb?caTTC/nb:0;
+  const impaye=inv.filter(i=>i.status!=="cancelled").reduce((s,i)=>s+Math.max(0,(i.total_ttc||0)-(i.paid_amount||0)),0);
+  const relItems=items.filter(it=>realIds.has(it.invoice_id));
+  const marge=relItems.reduce((s,it)=>s+((it.amount_ht||0)-(it.cost||0)*(it.quantity||0)),0);
+  const margePct=caHT>0?(marge/caHT*100):0;
 
-  // ventes par mois (12 derniers mois)
-  const now=new Date(), months=[];
-  for(let k=11;k>=0;k--){ const d=new Date(now.getFullYear(),now.getMonth()-k,1);
-    months.push({key:d.toISOString().slice(0,7), lbl:d.toLocaleDateString("fr-FR",{month:"short"}), v:0}); }
-  const idx={}; months.forEach((m,i)=>idx[m.key]=i);
-  real.forEach(i=>{ const k=(i.date||"").slice(0,7); if(k in idx) months[idx[k]].v+=(i.total_ttc||0); });
-
-  const kpi=(cls,lbl,val,unit)=>`<div class="kpi ${cls}"><div class="lbl">${lbl}</div><div class="val">${val}${unit?' <small>'+unit+'</small>':''}</div></div>`;
+  const kpi=(cls,lbl,val,unit,sub)=>`<div class="kpi ${cls}"><div class="lbl">${lbl}</div>
+    <div class="val">${val}${unit?' <small>'+unit+'</small>':''}</div>${sub?'<div class="sub">'+sub+'</div>':''}</div>`;
   let html=`<div class="kpis">
-    ${kpi("accent","Chiffre d'affaires",fmt(ca),"FBu")}
-    ${kpi("","Factures émises",fmt(nb),"")}
-    ${kpi("warn","Impayés",fmt(unpaid),"FBu")}
-    ${kpi("","Panier moyen",fmt(panier),"FBu")}
+    ${kpi("accent","Chiffre d'affaires (HT)",fmt(caHT),"FBu","TTC "+fmt(caTTC))}
+    ${kpi("","TVA collectée",fmt(tva),"FBu","")}
+    ${kpi("good","Marge brute",fmt(marge),"FBu",(caHT>0?margePct.toFixed(1)+" %":"—"))}
+    ${kpi("warn","Impayés",fmt(impaye),"FBu","")}
+    ${kpi("","Factures émises",fmt(nb),"","")}
+    ${kpi("","Panier moyen",fmt(panier),"FBu","")}
   </div>`;
 
+  // graphe : 12 derniers mois (tendance, indépendant du filtre de période)
+  const now=new Date(), months=[];
+  for(let k=11;k>=0;k--){ const d=new Date(now.getFullYear(),now.getMonth()-k,1);
+    months.push({key:iso(d).slice(0,7),lbl:d.toLocaleDateString("fr-FR",{month:"short"}),v:0}); }
+  const idx={}; months.forEach((m,i)=>idx[m.key]=i);
+  invoices.filter(i=>i.status==="sent"||i.status==="issued").forEach(i=>{const k=(i.date||"").slice(0,7);if(k in idx)months[idx[k]].v+=(i.total_ttc||0);});
   html+=`<section class="panel"><h2>Ventes des 12 derniers mois</h2>${barChart(months)}</section>`;
 
-  const rows=invoices.slice(0,12).map(i=>{
-    const cls=i.status==="sent"||i.status==="issued"?"sent":(i.status==="cancelled"?"cancel":"draft");
+  // répartition par société (mode holding uniquement)
+  const sel=document.getElementById("coSelect");
+  if(companies.length>1 && sel.value==="all"){
+    const byco={}; real.forEach(i=>byco[i.company_name]=(byco[i.company_name]||0)+(i.total_ttc||0));
+    html+=`<section class="panel"><h2>Répartition par société</h2>${rankList(byco,"FBu")}</section>`;
+  }
+
+  // top clients + top articles
+  const byClient={}; real.forEach(i=>byClient[i.client_name||"—"]=(byClient[i.client_name||"—"]||0)+(i.total_ttc||0));
+  const byArt={}; relItems.forEach(it=>byArt[it.designation||"—"]=(byArt[it.designation||"—"]||0)+(it.amount_ttc||0));
+  html+=`<div class="cols">
+    <section class="panel"><h2>Top clients</h2>${rankList(byClient,"FBu")}</section>
+    <section class="panel"><h2>Top articles</h2>${rankList(byArt,"FBu")}</section>
+  </div>`;
+
+  // dernières factures (dans la période)
+  const rows=inv.slice(0,12).map(i=>{
+    const cls=(i.status==="sent"||i.status==="issued")?"sent":(i.status==="cancelled"?"cancel":"draft");
     const lbl=i.status==="sent"?"Transmise":i.status==="issued"?"Émise":i.status==="cancelled"?"Annulée":"Brouillon";
     return `<tr><td>${esc(i.number)}</td><td>${esc(i.date)}</td><td>${esc(i.client_name)}</td>
-      <td class="num">${fmt(i.total_ttc)}</td><td><span class="pill ${cls}">${lbl}</span></td></tr>`;
-  }).join("");
+      <td class="num">${fmt(i.total_ttc)}</td><td><span class="pill ${cls}">${lbl}</span></td></tr>`;}).join("");
   html+=`<section class="panel"><h2>Dernières factures</h2><div class="tbl-scroll"><table>
     <thead><tr><th>N°</th><th>Date</th><th>Client</th><th class="num">Montant TTC</th><th>Statut</th></tr></thead>
-    <tbody>${rows||'<tr><td colspan="5" class="muted" style="padding:20px;text-align:center">Aucune facture.</td></tr>'}</tbody>
+    <tbody>${rows||'<tr><td colspan="5" class="muted" style="padding:20px;text-align:center">Aucune facture sur la période.</td></tr>'}</tbody>
     </table></div></section>`;
 
   document.getElementById("content").innerHTML=html;
 }
 
+function rankList(map,unit){
+  const arr=Object.entries(map).filter(([k,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if(!arr.length) return '<div class="rank"><div class="empty">Aucune donnée sur la période.</div></div>';
+  const max=arr[0][1]||1;
+  return '<div class="rank">'+arr.map(([k,v])=>`<div class="row">
+    <span class="name">${esc(k)}</span><span class="amt">${fmt(v)} ${unit}</span>
+    <span class="track"><span class="fill" style="width:${Math.max(3,v/max*100).toFixed(1)}%"></span></span></div>`).join("")+'</div>';
+}
+
 function barChart(months){
-  const W=720,H=200,pad=28,bw=(W-2*pad)/months.length, max=Math.max(1,...months.map(m=>m.v));
+  const W=760,H=200,pad=28,bw=(W-2*pad)/months.length,max=Math.max(1,...months.map(m=>m.v));
   let bars="",labels="";
   months.forEach((m,i)=>{
-    const h=(H-2*pad)*(m.v/max), x=pad+i*bw+bw*0.15, y=H-pad-h, w=bw*0.7;
+    const h=(H-2*pad)*(m.v/max),x=pad+i*bw+bw*0.15,y=H-pad-h,w=bw*0.7;
     bars+=`<rect class="bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(0,h).toFixed(1)}" rx="3"><title>${m.lbl} : ${fmt(m.v)} FBu</title></rect>`;
     labels+=`<text x="${(x+w/2).toFixed(1)}" y="${H-pad+13}" text-anchor="middle">${m.lbl}</text>`;
   });
@@ -213,7 +298,6 @@ function barChart(months){
     <line class="axis" x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}"/>${bars}${labels}</svg>`;
 }
 
-// reprise de session
 token=localStorage.getItem(TK);
 if(token){ start(); }
 </script>
