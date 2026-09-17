@@ -146,7 +146,7 @@
 <script>
 const SUPABASE_URL="https://pcmkpkqnvexybmjgnsec.supabase.co", ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjbWtwa3FudmV4eWJtamduc2VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4MjA0NDcsImV4cCI6MjEwNDM5NjQ0N30.kUKDuOuHjFkZfNEcBR3BHOmLQ8_bGeuw9zqrxEUJXRY";
 const TK="obr_report_token";
-let token=null, companies=[], invoices=[], items=[], range=null;
+let token=null, companies=[], invoices=[], items=null, range=null, loadSeq=0;
 
 const fmt=n=>new Intl.NumberFormat("fr-FR",{maximumFractionDigits:0}).format(Math.round(n||0));
 const esc=s=>(s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -199,24 +199,48 @@ async function start(){
   document.querySelectorAll('#periodbar .chip').forEach(ch=>ch.onclick=()=>{
     document.querySelectorAll('#periodbar .chip').forEach(c=>c.classList.remove('on'));
     ch.classList.add('on'); document.getElementById('from').value=''; document.getElementById('to').value='';
-    render();
+    loadData();
   });
   ['from','to'].forEach(id=>document.getElementById(id).onchange=()=>{
-    document.querySelectorAll('#periodbar .chip').forEach(c=>c.classList.remove('on')); render();
+    document.querySelectorAll('#periodbar .chip').forEach(c=>c.classList.remove('on')); loadData();
   });
   loadData();
 }
 
+// Borne basse de la requête : on ne télécharge PAS tout l'historique. On charge au moins les
+// 12 derniers mois (nécessaires au graphe) — ou plus loin si la période choisie l'exige.
+function fetchLowerBound(){
+  const on=document.querySelector('#periodbar .chip.on'); const key=on?on.dataset.p:"12m";
+  const now=new Date(); const twelve=iso(new Date(now.getFullYear(),now.getMonth()-11,1));
+  if(key==="all") return "0000-01-01";
+  const f=document.getElementById('from').value;
+  return (f && f<twelve) ? f : twelve;
+}
+// Lignes de factures : seulement pour les factures RÉELLES chargées (pas les brouillons),
+// par lots d'identifiants (URL bornée), en parallèle.
+async function fetchItemsFor(invs){
+  const ids=invs.filter(i=>i.status==="sent"||i.status==="issued").map(i=>i.id);
+  if(!ids.length) return [];
+  const chunks=[]; for(let i=0;i<ids.length;i+=150) chunks.push(ids.slice(i,i+150));
+  const parts=await Promise.all(chunks.map(ch=>
+    fetchAll("invoice_items?select=invoice_id,designation,quantity,amount_ht,amount_ttc,cost&invoice_id=in.("+ch.join(",")+")")));
+  return parts.flat();
+}
 async function loadData(){
+  const mySeq=++loadSeq;
   const sel=document.getElementById("coSelect");
   const val=companies.length>1 ? sel.value : String(companies[0].company_id);
   const flt = (val==="all") ? "" : ("&company_id=eq."+val);
   document.getElementById("coName").textContent =
     (val==="all") ? "Toutes mes sociétés" : ((companies.find(c=>String(c.company_id)===val)||{}).company_name||"Ma société");
   document.getElementById("content").innerHTML='<div class="loading">Chargement…</div>';
-  invoices=await fetchAll("invoices?select=id,number,date,client_name,company_name,total_ht,total_tva,total_ttc,status,payment_status,paid_amount&order=date.desc"+flt);
-  items=await fetchAll("invoice_items?select=invoice_id,designation,quantity,amount_ht,amount_ttc,cost"+flt);
-  render();
+  items=null;
+  invoices=await fetchAll("invoices?select=id,number,date,client_name,company_name,total_ht,total_tva,total_ttc,status,payment_status,paid_amount&order=date.desc&date=gte."+fetchLowerBound()+flt);
+  if(mySeq!==loadSeq) return;      // une autre sélection a pris le relais
+  render();                        // 1re peinture : ventes + graphe, immédiat
+  const it=await fetchItemsFor(invoices);
+  if(mySeq!==loadSeq) return;
+  items=it; render();              // 2e peinture : marge + top articles
 }
 
 function curRange(){
@@ -242,7 +266,8 @@ function render(){
   const nb=real.length;
   const panier=nb?caTTC/nb:0;
   const impaye=inv.filter(i=>i.status!=="cancelled").reduce((s,i)=>s+Math.max(0,(i.total_ttc||0)-(i.paid_amount||0)),0);
-  const relItems=items.filter(it=>realIds.has(it.invoice_id));
+  const itemsReady=Array.isArray(items);
+  const relItems=itemsReady?items.filter(it=>realIds.has(it.invoice_id)):[];
   const marge=relItems.reduce((s,it)=>s+((it.amount_ht||0)-(it.cost||0)*(it.quantity||0)),0);
   const margePct=caHT>0?(marge/caHT*100):0;
 
@@ -251,7 +276,7 @@ function render(){
   let html=`<div class="kpis">
     ${kpi("accent","Chiffre d'affaires (HT)",fmt(caHT),"FBu","TTC "+fmt(caTTC))}
     ${kpi("","TVA collectée",fmt(tva),"FBu","")}
-    ${kpi("good","Marge brute",fmt(marge),"FBu",(caHT>0?margePct.toFixed(1)+" %":"—"))}
+    ${itemsReady?kpi("good","Marge brute",fmt(marge),"FBu",(caHT>0?margePct.toFixed(1)+" %":"—")):kpi("good","Marge brute","…","","calcul en cours")}
     ${kpi("warn","Impayés",fmt(impaye),"FBu","")}
     ${kpi("","Factures émises",fmt(nb),"","")}
     ${kpi("","Panier moyen",fmt(panier),"FBu","")}
@@ -277,7 +302,7 @@ function render(){
   const byArt={}; relItems.forEach(it=>byArt[it.designation||"—"]=(byArt[it.designation||"—"]||0)+(it.amount_ttc||0));
   html+=`<div class="cols">
     <section class="panel"><h2>Top clients</h2>${rankList(byClient,"FBu")}</section>
-    <section class="panel"><h2>Top articles</h2>${rankList(byArt,"FBu")}</section>
+    <section class="panel"><h2>Top articles</h2>${itemsReady?rankList(byArt,"FBu"):'<div class="rank"><div class="empty">Chargement…</div></div>'}</section>
   </div>`;
 
   // dernières factures (dans la période)
