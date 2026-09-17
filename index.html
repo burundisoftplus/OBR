@@ -331,7 +331,7 @@ function render(){
   html+=`<section class="panel"><h2>Activité des 12 derniers mois</h2><div class="minis">
     ${mini("Chiffre d'affaires (HT)",caM,"var(--accent)",true)}
     ${mini("TVA collectée",tvaM,"#9a8f7c",true)}
-    ${mini("Dette clients (fin de mois)",detteM,"var(--warn)",extrasReady)}
+    ${mini("Dette clients (fin de mois)",detteM,"var(--warn)",extrasReady,"last")}
     ${mini("Encaissements banque",banqM,"var(--good)",extrasReady)}
     ${mini("Dépenses (achats)",depM,"#8a5a3c",extrasReady)}
   </div></section>`;
@@ -390,14 +390,17 @@ function rankList(map,unit){
 
 // Mini-graphe indépendant (12 mois, échelle propre). Le dernier mois est en pleine opacité.
 let _ml=[];
-function mini(title,vals,color,ready){
+function mini(title,vals,color,ready,mode){
   if(!ready) return `<div class="mini"><div class="mhead"><span class="mt">${title}</span><span class="mv muted">…</span></div><div class="mload">chargement…</div></div>`;
   const max=Math.max(1,...vals.map(v=>v||0)), n=vals.length, W=320,H=46,bw=W/n; let bars="";
   for(let i=0;i<n;i++){ const h=Math.max(1,(vals[i]||0)/max*(H-4));
     bars+=`<rect x="${(i*bw+1).toFixed(1)}" y="${(H-h).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${h.toFixed(1)}" rx="1.5" fill="${color}" opacity="${i===n-1?1:.5}"><title>${_ml[i]||''} : ${fmt(vals[i]||0)} FBu</title></rect>`; }
-  return `<div class="mini"><div class="mhead"><span class="mt">${title}</span><span class="mv">${fmt(vals[n-1]||0)} <small>FBu</small></span></div>
+  // Chiffre en tête : SOMME des 12 mois pour un flux ; DERNIÈRE valeur pour un solde (dette).
+  const head = mode==="last" ? (vals[n-1]||0) : vals.reduce((s,v)=>s+(v||0),0);
+  const cap = mode==="last" ? "actuel" : "cumul 12 mois";
+  return `<div class="mini"><div class="mhead"><span class="mt">${title}</span><span class="mv">${fmt(head)} <small>FBu</small></span></div>
     <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="msvg">${bars}</svg>
-    <div class="mfoot"><span>${_ml[0]||''}</span><span>${_ml[n-1]||''}</span></div></div>`;
+    <div class="mfoot"><span>${_ml[0]||''}</span><span>${cap}</span><span>${_ml[n-1]||''}</span></div></div>`;
 }
 function barChart(months){
   const W=760,H=200,pad=28,bw=(W-2*pad)/months.length,max=Math.max(1,...months.map(m=>m.v));
