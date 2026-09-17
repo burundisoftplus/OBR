@@ -68,14 +68,14 @@
   .periodbar .dates{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
   .periodbar .dates input{padding:6px 8px;border:1px solid var(--rule-strong);border-radius:2px;background:var(--elev);color:var(--ink);font:inherit;font-size:12px}
 
-  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
-  .kpi{background:var(--surface);border:1px solid var(--rule);border-top:2px solid var(--ink);border-radius:var(--r);padding:13px 15px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px}
+  .kpi{background:var(--surface);border:1px solid var(--rule);border-top:2px solid var(--ink);border-radius:var(--r);padding:8px 11px}
   .kpi.accent{position:relative}
-  .kpi.accent::before{content:"";position:absolute;left:15px;top:-2px;width:42px;height:2px;background:var(--accent)}
-  .kpi .lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
-  .kpi .val{font-family:var(--serif);font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.05;margin-top:7px;font-variant-numeric:tabular-nums lining-nums}
-  .kpi .val small{font-family:var(--sans);font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0}
-  .kpi .sub{font-size:11px;color:var(--ink2);margin-top:3px;font-family:var(--serif);font-style:italic}
+  .kpi.accent::before{content:"";position:absolute;left:11px;top:-2px;width:34px;height:2px;background:var(--accent)}
+  .kpi .lbl{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+  .kpi .val{font-family:var(--serif);font-size:18px;font-weight:600;letter-spacing:-.02em;line-height:1.05;margin-top:3px;font-variant-numeric:tabular-nums lining-nums}
+  .kpi .val small{font-family:var(--sans);font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0}
+  .kpi .sub{font-size:10px;color:var(--ink2);margin-top:2px;font-family:var(--serif);font-style:italic}
   .kpi.accent .val{color:var(--accent)} .kpi.warn .val{color:var(--warn)} .kpi.good .val{color:var(--good)}
 
   section.panel{background:var(--surface);border:1px solid var(--rule);border-radius:var(--r);margin-top:16px;padding:14px 16px}
@@ -219,12 +219,18 @@ function fetchLowerBound(){
 // Lignes de factures : seulement pour les factures RÉELLES chargées (pas les brouillons),
 // par lots d'identifiants (URL bornée), en parallèle.
 async function fetchItemsFor(invs){
-  const ids=invs.filter(i=>i.status==="sent"||i.status==="issued").map(i=>i.id);
-  if(!ids.length) return [];
-  const chunks=[]; for(let i=0;i<ids.length;i+=150) chunks.push(ids.slice(i,i+150));
-  const parts=await Promise.all(chunks.map(ch=>
-    fetchAll("invoice_items?select=invoice_id,designation,quantity,amount_ht,amount_ttc,cost&invoice_id=in.("+ch.join(",")+")")));
-  return parts.flat();
+  // Les id de factures ne sont PAS uniques entre sociétés : on récupère les lignes
+  // société par société (company_id + invoice_id) pour éviter toute contamination.
+  const real=invs.filter(i=>i.status==="sent"||i.status==="issued");
+  if(!real.length) return [];
+  const byCo={}; real.forEach(i=>{(byCo[i.company_id]=byCo[i.company_id]||[]).push(i.id);});
+  const reqs=[];
+  for(const cid in byCo){ const ids=byCo[cid];
+    for(let i=0;i<ids.length;i+=150){ const ch=ids.slice(i,i+150);
+      reqs.push(fetchAll("invoice_items?select=company_id,invoice_id,designation,quantity,amount_ht,amount_ttc,cost&company_id=eq."+cid+"&invoice_id=in.("+ch.join(",")+")"));
+    }
+  }
+  return (await Promise.all(reqs)).flat();
 }
 async function loadData(){
   const mySeq=++loadSeq;
@@ -235,7 +241,7 @@ async function loadData(){
     (val==="all") ? "Toutes mes sociétés" : ((companies.find(c=>String(c.company_id)===val)||{}).company_name||"Ma société");
   document.getElementById("content").innerHTML='<div class="loading">Chargement…</div>';
   items=null;
-  invoices=await fetchAll("invoices?select=id,number,date,client_name,company_name,total_ht,total_tva,total_ttc,status,payment_status,paid_amount&order=date.desc&date=gte."+fetchLowerBound()+flt);
+  invoices=await fetchAll("invoices?select=id,company_id,number,date,client_name,company_name,total_ht,total_tva,total_ttc,status,payment_status,paid_amount&order=date.desc&date=gte."+fetchLowerBound()+flt);
   if(mySeq!==loadSeq) return;      // une autre sélection a pris le relais
   render();                        // 1re peinture : ventes + graphe, immédiat
   const it=await fetchItemsFor(invoices);
@@ -259,15 +265,16 @@ function render(){
   const inRange=i=>(i.date||"")>=from&&(i.date||"")<=to;
   const inv=invoices.filter(inRange);
   const real=inv.filter(i=>i.status==="sent"||i.status==="issued");
-  const realIds=new Set(real.map(i=>i.id));
+  const realIds=new Set(real.map(i=>i.company_id+":"+i.id));
   const caHT=real.reduce((s,i)=>s+(i.total_ht||0),0);
   const caTTC=real.reduce((s,i)=>s+(i.total_ttc||0),0);
   const tva=real.reduce((s,i)=>s+(i.total_tva||0),0);
   const nb=real.length;
   const panier=nb?caTTC/nb:0;
-  const impaye=inv.filter(i=>i.status!=="cancelled").reduce((s,i)=>s+Math.max(0,(i.total_ttc||0)-(i.paid_amount||0)),0);
+  // Impayés = créances RÉELLES non soldées (les brouillons ne sont pas des créances).
+  const impaye=real.reduce((s,i)=>s+Math.max(0,(i.total_ttc||0)-(i.paid_amount||0)),0);
   const itemsReady=Array.isArray(items);
-  const relItems=itemsReady?items.filter(it=>realIds.has(it.invoice_id)):[];
+  const relItems=itemsReady?items.filter(it=>realIds.has(it.company_id+":"+it.invoice_id)):[];
   const marge=relItems.reduce((s,it)=>s+((it.amount_ht||0)-(it.cost||0)*(it.quantity||0)),0);
   const margePct=caHT>0?(marge/caHT*100):0;
 
