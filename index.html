@@ -76,6 +76,15 @@
   .kpi .val{font-family:var(--serif);font-size:18px;font-weight:600;letter-spacing:-.02em;line-height:1.05;margin-top:3px;font-variant-numeric:tabular-nums lining-nums}
   .kpi .val small{font-family:var(--sans);font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0}
   .kpi .sub{font-size:10px;color:var(--ink2);margin-top:2px;font-family:var(--serif);font-style:italic}
+  .minis{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:12px}
+  .mini{border:1px solid var(--rule);border-radius:var(--r);padding:9px 12px 7px}
+  .mhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:5px}
+  .mt{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .mv{font-family:var(--serif);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums lining-nums;white-space:nowrap}
+  .mv small{font-size:9px;color:var(--muted)} .mv.muted{color:var(--muted)}
+  .msvg{width:100%;height:46px;display:block}
+  .mfoot{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:1px}
+  .mload{height:46px;display:grid;place-items:center;font-size:11px;color:var(--muted);font-style:italic}
   .kpi.accent .val{color:var(--accent)} .kpi.warn .val{color:var(--warn)} .kpi.good .val{color:var(--good)}
 
   section.panel{background:var(--surface);border:1px solid var(--rule);border-radius:var(--r);margin-top:16px;padding:14px 16px}
@@ -146,7 +155,7 @@
 <script>
 const SUPABASE_URL="https://pcmkpkqnvexybmjgnsec.supabase.co", ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjbWtwa3FudmV4eWJtamduc2VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4MjA0NDcsImV4cCI6MjEwNDM5NjQ0N30.kUKDuOuHjFkZfNEcBR3BHOmLQ8_bGeuw9zqrxEUJXRY";
 const TK="obr_report_token";
-let token=null, companies=[], invoices=[], items=null, range=null, loadSeq=0;
+let token=null, companies=[], invoices=[], items=null, payments=null, purchases=null, invAllReal=null, range=null, loadSeq=0;
 
 const fmt=n=>new Intl.NumberFormat("fr-FR",{maximumFractionDigits:0}).format(Math.round(n||0));
 const esc=s=>(s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -240,13 +249,22 @@ async function loadData(){
   document.getElementById("coName").textContent =
     (val==="all") ? "Toutes mes sociétés" : ((companies.find(c=>String(c.company_id)===val)||{}).company_name||"Ma société");
   document.getElementById("content").innerHTML='<div class="loading">Chargement…</div>';
-  items=null;
-  invoices=await fetchAll("invoices?select=id,company_id,number,date,client_name,company_name,total_ht,total_tva,total_ttc,status,payment_status,paid_amount&order=date.desc&date=gte."+fetchLowerBound()+flt);
+  items=null; payments=null; purchases=null; invAllReal=null;
+  const lb=fetchLowerBound();
+  invoices=await fetchAll("invoices?select=id,company_id,number,date,client_name,company_name,total_ht,total_tva,total_ttc,status,payment_status,paid_amount&order=date.desc&date=gte."+lb+flt);
   if(mySeq!==loadSeq) return;      // une autre sélection a pris le relais
-  render();                        // 1re peinture : ventes + graphe, immédiat
-  const it=await fetchItemsFor(invoices);
+  render();                        // 1re peinture : KPI + CA/TVA, immédiat
+  // Arrière-plan (parallèle) : lignes (marge), règlements (encaissements + dette), achats (dépenses),
+  // et factures réelles de TOUT l'historique (pour le solde dû client de fin de mois).
+  const [it,pays,purch,invAll]=await Promise.all([
+    fetchItemsFor(invoices),
+    fetchAll("payments?select=company_id,date,amount,mode,sens&sens=eq.client"+flt),
+    fetchAll("purchases?select=company_id,date,total_ttc&date=gte."+lb+flt),
+    fetchAll("invoices?select=company_id,date,total_ttc,source&status=in.(sent,issued)"+flt)
+  ]);
   if(mySeq!==loadSeq) return;
-  items=it; render();              // 2e peinture : marge + top articles
+  items=it; payments=pays; purchases=purch; invAllReal=invAll;
+  render();                        // 2e peinture : marge, dépenses, encaissements, dette
 }
 
 function curRange(){
@@ -289,13 +307,34 @@ function render(){
     ${kpi("","Panier moyen",fmt(panier),"FBu","")}
   </div>`;
 
-  // graphe : 12 derniers mois (tendance, indépendant du filtre de période)
+  // Activité des 12 derniers mois — mini-graphes INDÉPENDANTS (chacun sa propre échelle),
+  // toujours sur 12 mois quel que soit le filtre de période.
   const now=new Date(), months=[];
   for(let k=11;k>=0;k--){ const d=new Date(now.getFullYear(),now.getMonth()-k,1);
-    months.push({key:iso(d).slice(0,7),lbl:d.toLocaleDateString("fr-FR",{month:"short"}),v:0}); }
-  const idx={}; months.forEach((m,i)=>idx[m.key]=i);
-  invoices.filter(i=>i.status==="sent"||i.status==="issued").forEach(i=>{const k=(i.date||"").slice(0,7);if(k in idx)months[idx[k]].v+=(i.total_ttc||0);});
-  html+=`<section class="panel"><h2>Ventes des 12 derniers mois</h2>${barChart(months)}</section>`;
+    months.push({key:iso(d).slice(0,7),lbl:d.toLocaleDateString("fr-FR",{month:"short"})}); }
+  const idx={}; months.forEach((m,i)=>idx[m.key]=i); _ml=months.map(m=>m.lbl);
+  const caM=months.map(()=>0),tvaM=months.map(()=>0),depM=months.map(()=>0),banqM=months.map(()=>0),detteM=months.map(()=>0);
+  invoices.filter(i=>i.status==="sent"||i.status==="issued").forEach(i=>{const k=(i.date||"").slice(0,7);
+    if(k in idx){caM[idx[k]]+=(i.total_ht||0);tvaM[idx[k]]+=(i.total_tva||0);}});
+  const extrasReady=Array.isArray(purchases)&&Array.isArray(payments)&&Array.isArray(invAllReal);
+  if(extrasReady){
+    purchases.forEach(p=>{const k=(p.date||"").slice(0,7);if(k in idx)depM[idx[k]]+=(p.total_ttc||0);});
+    payments.forEach(p=>{if(String(p.mode||"").toLowerCase().startsWith("esp"))return;
+      const k=(p.date||"").slice(0,7);if(k in idx)banqM[idx[k]]+=(p.amount||0);});
+    // Dette clients = solde dû à la fin de chaque mois = cumul(factures réelles TTC, avoirs en négatif)
+    //                 − cumul(encaissements clients), sur TOUT l'historique jusqu'à ce mois.
+    months.forEach((m,mi)=>{let inv=0,pay=0;const end=m.key;
+      invAllReal.forEach(i=>{if((i.date||"").slice(0,7)<=end){const t=(i.total_ttc||0);inv+=(i.source==="avoir"?-t:t);}});
+      payments.forEach(p=>{if((p.date||"").slice(0,7)<=end)pay+=(p.amount||0);});
+      detteM[mi]=Math.max(0,inv-pay);});
+  }
+  html+=`<section class="panel"><h2>Activité des 12 derniers mois</h2><div class="minis">
+    ${mini("Chiffre d'affaires (HT)",caM,"var(--accent)",true)}
+    ${mini("TVA collectée",tvaM,"#9a8f7c",true)}
+    ${mini("Dette clients (fin de mois)",detteM,"var(--warn)",extrasReady)}
+    ${mini("Encaissements banque",banqM,"var(--good)",extrasReady)}
+    ${mini("Dépenses (achats)",depM,"#8a5a3c",extrasReady)}
+  </div></section>`;
 
   // répartition par société (mode holding uniquement)
   const sel=document.getElementById("coSelect");
@@ -349,6 +388,17 @@ function rankList(map,unit){
     <span class="track"><span class="fill" style="width:${Math.max(3,v/max*100).toFixed(1)}%"></span></span></div>`).join("")+'</div>';
 }
 
+// Mini-graphe indépendant (12 mois, échelle propre). Le dernier mois est en pleine opacité.
+let _ml=[];
+function mini(title,vals,color,ready){
+  if(!ready) return `<div class="mini"><div class="mhead"><span class="mt">${title}</span><span class="mv muted">…</span></div><div class="mload">chargement…</div></div>`;
+  const max=Math.max(1,...vals.map(v=>v||0)), n=vals.length, W=320,H=46,bw=W/n; let bars="";
+  for(let i=0;i<n;i++){ const h=Math.max(1,(vals[i]||0)/max*(H-4));
+    bars+=`<rect x="${(i*bw+1).toFixed(1)}" y="${(H-h).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${h.toFixed(1)}" rx="1.5" fill="${color}" opacity="${i===n-1?1:.5}"><title>${_ml[i]||''} : ${fmt(vals[i]||0)} FBu</title></rect>`; }
+  return `<div class="mini"><div class="mhead"><span class="mt">${title}</span><span class="mv">${fmt(vals[n-1]||0)} <small>FBu</small></span></div>
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="msvg">${bars}</svg>
+    <div class="mfoot"><span>${_ml[0]||''}</span><span>${_ml[n-1]||''}</span></div></div>`;
+}
 function barChart(months){
   const W=760,H=200,pad=28,bw=(W-2*pad)/months.length,max=Math.max(1,...months.map(m=>m.v));
   let bars="",labels="";
